@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # --- Base de Datos Compartida ---
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_main
+    restart: always
+    environment:
+      POSTGRES_USER: user_db
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: microservices_db
+    ports:
+      - "5438:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # --- Auth Service (Python + FastAPI) ---
+  auth-service:
+    build: ./backend/auth-service
+    container_name: auth_service
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend/auth-service:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/auth-service/.env
+    depends_on:
+      - db
+
+  # --- Products Service (PHP + Laravel) ---
+  products-service:
+    build:
+      context: ./backend/products-service
+      dockerfile: Dockerfile
+    container_name: products_service
+    restart: always
+    # Comando para mantener vivo el contenedor si Laravel no está instalado
+    command: bash -c "if [ -f artisan ]; then php artisan serve --host=0.0.0.0 --port=8000; else echo 'Laravel no instalado. Esperando instalación...'; tail -f /dev/null; fi"
+    working_dir: /var/www
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./backend/products-service:/var/www
+    env_file:
+      - ./backend/products-service/.env
+    depends_on:
+      - db
+
+  # --- Inventory Service (Rust + Axum) ---
+  inventory-service:
+    build: ./backend/inventory-service
+    container_name: inventory_service
+    restart: always
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./backend/inventory-service:/app
+      - /app/target
+    environment:
+      DATABASE_URL: postgres://user_db:admin123@db:5432/microservices_db
+      JWT_SECRET: una_clave_muy_secreta_y_larga_para_jwt
+    depends_on:
+      - db
+
+  # --- Frontend (Vue.js) ---
+  frontend:
+    build: ./frontend
+    container_name: frontend_client
+    restart: always
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+# --- Volúmenes (Al final del archivo) ---
+volumes:
+  postgres_data:
