@@ -11,13 +11,13 @@ return new class extends Migration
         Schema::create('cart_items', function (Blueprint $table) {
             $table->id();
             
-            // Relación con el carrito: Si se borra el carrito, se borran los items (cascade)
+            
             $table->foreignId('cart_id')->constrained()->onDelete('cascade');
             
-            // Relación con el producto: Para saber qué producto es
+            
             $table->foreignId('product_id')->constrained();
             
-            // Cuántos productos de este tipo lleva
+            
             $table->integer('quantity');
             
             $table->timestamps();

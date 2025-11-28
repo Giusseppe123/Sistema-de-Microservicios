@@ -12,7 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // AQUÍ REGISTRAMOS NUESTRO FILTRO DE SEGURIDAD
+        //FILTRO DE SEGURIDAD!!!!
         $middleware->alias([
             'jwt.auth' => \App\Http\Middleware\JwtMiddleware::class,
         ]);
