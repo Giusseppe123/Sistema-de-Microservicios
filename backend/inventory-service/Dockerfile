@@ -11,5 +11,5 @@ COPY . .
 # Exponemos puerto
 EXPOSE 8002
 
-# Comando de arranque
+# Comando de arranques
 CMD ["cargo", "watch", "-x", "run"]
