@@ -1,28 +1,37 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import axios from 'axios';
 import { useAuthStore } from '../stores/auth';
 
 const store = useAuthStore();
 const products = ref([]);
+const searchQuery = ref(''); 
 
-// Estados para el Formulario (Crear / Editar)
 const isEditing = ref(false);
 const editingId = ref(null);
 const productForm = ref({ name: '', price: '', stock: '', description: '', image: null });
 
-// Estado para inputs
 const stockInputs = ref({});
 const cartInputs = ref({});
 
-// 1. Cargar los productos desde Laravel
+const filteredProducts = computed(() => {
+  if (!searchQuery.value.trim()) {
+    return products.value;
+  }
+  
+  const query = searchQuery.value.toLowerCase();
+  return products.value.filter(product => 
+    product.name.toLowerCase().includes(query) ||
+    (product.description && product.description.toLowerCase().includes(query))
+  );
+});
+
+// 1. CARGAR PRODUCTOS (Laravel)
 const loadProducts = async () => {
   try {
     const res = await axios.get('http://localhost:8001/api/products');
-    // Guardamos los productos en la variable reactiva
     products.value = res.data.map(p => ({
       ...p,
-      // Aseguramos que stock sea un número para evitar errores visuales
       stock: parseInt(p.stock) 
     }));
   } catch (e) {
@@ -30,7 +39,7 @@ const loadProducts = async () => {
   }
 };
 
-//2. Guardar productos del laravel
+// 2. GUARDAR PRODUCTO (Laravel)
 const saveProduct = async () => {
   const formData = new FormData();
   formData.append('name', productForm.value.name);
@@ -59,14 +68,14 @@ const saveProduct = async () => {
   }
 };
 
-// 3. Eliminar productos del laravel
+
+// 3. ELIMINAR PRODUCTO (Laravel)
 const deleteProduct = async (id) => {
   if (!confirm("¿Eliminar este producto?")) return;
   try {
     await axios.delete(`http://localhost:8001/api/products/${id}`, {
       headers: { Authorization: `Bearer ${store.token}` }
     });
-    // Lo quitamos de la lista visualmente para que sea rápido
     products.value = products.value.filter(p => p.id !== id);
     alert('Producto eliminado.');
   } catch (e) {
@@ -74,13 +83,12 @@ const deleteProduct = async (id) => {
   }
 };
 
-// 4. Gestionar inventario (Rust + actualización visual)
+// 4. GESTIONAR INVENTARIO (RUST + ACTUALIZACIÓN VISUAL)
 
 const updateStockRust = async (productId) => {
-  // Obtenemos el valor del input específico de este producto
   const newStockVal = stockInputs.value[productId];
 
-  // Validación simple
+  
   if (newStockVal === undefined || newStockVal === "") {
     return alert("Por favor ingresa una cantidad válida");
   }
@@ -96,7 +104,8 @@ const updateStockRust = async (productId) => {
       headers: { Authorization: `Bearer ${store.token}` }
     });
 
-
+    // B. TRUCO VISUAL: Actualizamos el número en la pantalla inmediatamente
+    // Buscamos el producto en nuestra lista local
     const productIndex = products.value.findIndex(p => p.id === productId);
     if (productIndex !== -1) {
       // Forzamos la actualización del valor visual
@@ -114,8 +123,9 @@ const updateStockRust = async (productId) => {
   }
 };
 
-// 5. Carrito (Laravel)
-
+// ---------------------------------------------------------
+// 5. CARRITO (Laravel)
+// ---------------------------------------------------------
 const addToCart = async (productId) => {
   const qty = cartInputs.value[productId] || 1;
   try {
@@ -132,7 +142,12 @@ const addToCart = async (productId) => {
   }
 };
 
-// Utiles
+
+const clearSearch = () => {
+  searchQuery.value = '';
+};
+
+
 const handleFile = (e) => productForm.value.image = e.target.files[0];
 const startEdit = (prod) => {
   isEditing.value = true;
@@ -216,17 +231,54 @@ onMounted(loadProducts);
         </div>
       </div>
 
+      <div class="bg-gradient-to-r from-blue-600 to-cyan-600 p-6 rounded-xl shadow-lg mb-6">
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+          <input 
+            v-model="searchQuery" 
+            type="text" 
+            placeholder="🔍 Buscar productos por nombre o descripción..."
+            class="w-full pl-12 pr-12 py-3 rounded-lg bg-white/90 backdrop-blur-sm text-gray-800 placeholder-gray-500 border-2 border-white/50 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all font-medium"
+          >
+          <button 
+            v-if="searchQuery" 
+            @click="clearSearch" 
+            class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-red-600 transition-colors"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
       <h2 class="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
         <span>Catálogo de Productos</span>
-        <span class="text-sm font-normal text-gray-500 bg-gray-200 px-3 py-1 rounded-full">{{ products.length }} items</span>
+        <span class="text-sm font-normal text-gray-500 bg-gray-200 px-3 py-1 rounded-full">
+          {{ filteredProducts.length }} {{ searchQuery ? 'encontrados' : 'items' }}
+        </span>
       </h2>
       
-      <div v-if="products.length === 0" class="text-center py-12 bg-white rounded-lg border border-dashed border-gray-300">
+      <!-- 🔍 NUEVO: Mensaje cuando no hay resultados -->
+      <div v-if="filteredProducts.length === 0 && searchQuery" class="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-300">
+        <div class="text-6xl mb-4">🔍</div>
+        <p class="text-gray-600 text-xl font-semibold mb-2">No se encontraron productos</p>
+        <p class="text-gray-400 mb-4">Intenta con otro término de búsqueda</p>
+        <button @click="clearSearch" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+          Limpiar búsqueda
+        </button>
+      </div>
+
+      <div v-else-if="products.length === 0" class="text-center py-12 bg-white rounded-lg border border-dashed border-gray-300">
         <p class="text-gray-400 text-lg">No hay productos disponibles.</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <div v-for="prod in products" :key="prod.id" class="bg-white rounded-xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden flex flex-col border border-gray-100">
+        <div v-for="prod in filteredProducts" :key="prod.id" class="bg-white rounded-xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden flex flex-col border border-gray-100">
           
           <div class="h-48 bg-gray-100 relative group">
             <img v-if="prod.image_url" :src="prod.image_url" class="w-full h-full object-cover transition duration-500 group-hover:scale-105" />
