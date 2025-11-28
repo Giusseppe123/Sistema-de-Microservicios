@@ -30,6 +30,40 @@ Este proyecto implementa una **arquitectura de microservicios políglota** para 
 ## 2. Arquitectura del Sistema
 
 
+### 2.1 Diagrama de Arquitectura
+
+```mermaid
+graph TB
+    subgraph "Cliente"
+        FE["🌐 Frontend<br/>Vue.js 3<br/>Puerto: 5173"]
+    end
+    
+    subgraph "Microservicios Backend"
+        AUTH["🔐 Auth Service<br/>FastAPI<br/>Puerto: 8000"]
+        PROD["📦 Products Service<br/>Laravel<br/>Puerto: 8001"]
+        INV["📊 Inventory Service<br/>Rust/Axum<br/>Puerto: 8002"]
+    end
+    
+    subgraph "Persistencia"
+        DB[("🗄️ PostgreSQL<br/>Puerto: 5438<br/>microservices_db")]
+    end
+    
+    FE -->|"POST /register<br/>POST /login"| AUTH
+    FE -->|"GET/POST/DELETE<br/>/api/products<br/>/api/cart"| PROD
+    FE -->|"GET/POST<br/>/api/inventory"| INV
+    
+    AUTH -->|"SQLAlchemy<br/>users table"| DB
+    PROD -->|"Eloquent ORM<br/>products, carts, cart_items"| DB
+    INV -->|"SQLx async<br/>inventory table"| DB
+    
+    PROD -.->|"Consulta stock"| INV
+    
+    style FE fill:#4FC08D,stroke:#333,stroke-width:2px,color:#fff
+    style AUTH fill:#009688,stroke:#333,stroke-width:2px,color:#fff
+    style PROD fill:#FF2D20,stroke:#333,stroke-width:2px,color:#fff
+    style INV fill:#000,stroke:#333,stroke-width:2px,color:#fff
+    style DB fill:#336791,stroke:#333,stroke-width:2px,color:#fff
+```
 
 
 
@@ -61,7 +95,39 @@ Este proyecto implementa una **arquitectura de microservicios políglota** para 
 | POST | `/verify` | Verificación de cuenta con código | No |
 | POST | `/login` | Inicio de sesión y generación de JWT | No |
 
+#### Flujo de Autenticación
 
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant F as Frontend
+    participant A as Auth Service
+    participant DB as PostgreSQL
+    
+    Note over U,DB: Registro
+    U->>F: Completar formulario
+    F->>A: POST /register
+    A->>DB: INSERT user (is_verified=false)
+    A->>U: Enviar código por email
+    A-->>F: {message: "Usuario creado"}
+    
+    Note over U,DB: Verificación
+    U->>F: Ingresar código
+    F->>A: POST /verify {code}
+    A->>DB: UPDATE user SET is_verified=true
+    A-->>F: {message: "Cuenta verificada"}
+    
+    Note over U,DB: Login
+    U->>F: Email + Password
+    F->>A: POST /login
+    A->>DB: SELECT user WHERE email
+    A->>A: Verificar bcrypt hash
+    A->>A: Generar JWT (role, user_id, exp)
+    A-->>F: {access_token: "eyJ..."}
+    F->>F: Guardar en localStorage
+    F->>F: Decodificar JWT (jwtDecode)
+    F-->>U: Redirigir a /home
+```
 
 #### Características Técnicas
 
@@ -152,7 +218,32 @@ created_at: timestamp
 updated_at: timestamp
 ```
 
+#### Flujo de Checkout
 
+```mermaid
+sequenceDiagram
+    participant F as Frontend
+    participant P as Products Service
+    participant I as Inventory Service
+    participant DB as PostgreSQL
+    
+    F->>P: POST /api/cart/checkout<br/>(JWT token)
+    P->>P: Validar JWT
+    P->>DB: SELECT cart_items WHERE cart_id
+    
+    loop Para cada item
+        P->>I: GET /api/inventory/{product_id}
+        I-->>P: {stock: 50}
+        P->>P: Verificar stock >= quantity
+        P->>I: POST /api/inventory<br/>{product_id, stock: stock-quantity}
+        I->>DB: UPSERT inventory
+        I-->>P: {success: true}
+    end
+    
+    P->>DB: UPDATE cart SET status='completed'
+    P->>DB: DELETE cart_items WHERE cart_id
+    P-->>F: {message: "Compra exitosa", total: 1500}
+```
 
 ---
 
@@ -303,7 +394,45 @@ HMACSHA256(
 )
 ```
 
+### 4.3 Flujo de JWT en el Sistema
 
+```mermaid
+sequenceDiagram
+    participant F as Frontend
+    participant A as Auth Service
+    participant P as Products Service
+    participant I as Inventory Service
+    
+    Note over F,I: 1. Autenticación
+    F->>A: POST /login {email, password}
+    A->>A: Verificar credenciales
+    A->>A: Crear JWT con:<br/>{sub: email, role: admin, user_id: 1, exp: ...}
+    A->>A: Firmar con SECRET_KEY (HS256)
+    A-->>F: {access_token: "eyJ..."}
+    F->>F: Guardar en localStorage
+    
+    Note over F,I: 2. Petición Protegida (Crear Producto)
+    F->>P: POST /api/products<br/>Authorization: Bearer eyJ...
+    P->>P: Extraer token del header
+    P->>P: Decodificar y verificar firma<br/>con SECRET_KEY
+    P->>P: Verificar role === 'admin'
+    P->>P: Crear producto
+    P-->>F: {id: 1, name: "Laptop", ...}
+    
+    Note over F,I: 3. Actualizar Inventario
+    F->>I: POST /api/inventory<br/>Authorization: Bearer eyJ...
+    I->>I: Validar JWT con jsonwebtoken crate
+    I->>I: Verificar firma y expiración
+    I->>I: Actualizar stock (UPSERT)
+    I-->>F: {product_id: 1, stock: 100}
+    
+    Note over F,I: 4. Token Expirado
+    F->>P: GET /api/products<br/>Authorization: Bearer eyJ...
+    P->>P: Decodificar JWT
+    P->>P: Verificar exp < now()
+    P-->>F: 401 Unauthorized<br/>{error: "Token expirado"}
+    F->>F: Redirigir a /login
+```
 
 ### 4.4 Implementación en cada Servicio
 
@@ -462,6 +591,46 @@ WHERE features->>'gpu' = 'RTX 3060';
 ---
 
 ## 6. Orquestación con Docker
+
+```mermaid
+graph TB
+    subgraph "Docker Network: microservices_network"
+        subgraph "Frontend Container"
+            FE["frontend_client<br/>Node.js + Vite<br/>Puerto: 5173"] 
+        end
+        
+        subgraph "Backend Containers"
+            AUTH["auth_service<br/>Python 3.9<br/>Puerto: 8000"]
+            PROD["products_service<br/>PHP 8.2<br/>Puerto: 8001"]
+            INV["inventory_service<br/>Rust<br/>Puerto: 8002"]
+        end
+        
+        subgraph "Database Container"
+            DB["postgres_main<br/>PostgreSQL 15<br/>Puerto: 5438"]
+        end
+        
+        FE -->|HTTP| AUTH
+        FE -->|HTTP| PROD
+        FE -->|HTTP| INV
+        
+        AUTH -->|SQLAlchemy| DB
+        PROD -->|Eloquent| DB
+        INV -->|SQLx| DB
+    end
+    
+    HOST["Host Machine<br/>localhost"] -.->|"5173"| FE
+    HOST -.->|"8000"| AUTH
+    HOST -.->|"8001"| PROD
+    HOST -.->|"8002"| INV
+    HOST -.->|"5438"| DB
+    
+    style FE fill:#4FC08D,stroke:#333,stroke-width:2px
+    style AUTH fill:#009688,stroke:#333,stroke-width:2px
+    style PROD fill:#FF2D20,stroke:#333,stroke-width:2px
+    style INV fill:#000,stroke:#333,stroke-width:2px,color:#fff
+    style DB fill:#336791,stroke:#333,stroke-width:2px
+    style HOST fill:#f9f,stroke:#333,stroke-width:2px
+```
 
 ### 6.2 Configuración de Servicios
 
