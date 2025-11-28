@@ -370,7 +370,61 @@ console.log(decoded.role);  // "admin" o "user"
 
 ## 5. Base de Datos PostgreSQL
 
+### 5.1 Esquema de Base de Datos
 
+```mermaid
+erDiagram
+    USERS ||--o{ CARTS : "tiene"
+    CARTS ||--|{ CART_ITEMS : "contiene"
+    PRODUCTS ||--o{ CART_ITEMS : "referenciado en"
+    PRODUCTS ||--|| INVENTORY : "tiene stock en"
+    
+    USERS {
+        int id PK
+        varchar username
+        varchar name
+        varchar email UK
+        varchar hashed_password
+        varchar verification_code
+        boolean is_verified
+        varchar role
+        timestamp created_at
+    }
+    
+    PRODUCTS {
+        bigint id PK
+        varchar name
+        text description
+        decimal price
+        int stock
+        varchar image_url
+        jsonb features
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    CARTS {
+        bigint id PK
+        int user_id FK
+        varchar status
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    CART_ITEMS {
+        bigint id PK
+        bigint cart_id FK
+        bigint product_id FK
+        int quantity
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    INVENTORY {
+        int product_id PK
+        int stock
+    }
+```
 
 ### 5.2 Uso de SQL y NoSQL (JSONB)
 
