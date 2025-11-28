@@ -23,7 +23,7 @@ export const useAuthStore = defineStore('auth', {
             this.token = response.data.access_token;
             localStorage.setItem('token', this.token);
 
-            // Leemos el rol del token
+            // se lee el rol del tooken
             const decoded = jwtDecode(this.token);
             this.role = decoded.role;
             this.user = decoded.sub;

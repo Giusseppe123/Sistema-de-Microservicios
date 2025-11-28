@@ -32,33 +32,33 @@ const loadCart = async () => {
   }
 };
 
-// --- ELIMINAR UN ITEM ---
+// eliminacion del item en un carrito
 const removeItem = async (itemId) => {
   if(!confirm("¿Quitar este producto?")) return;
   try {
     await axios.delete(`http://localhost:8001/api/cart/items/${itemId}`, {
       headers: { Authorization: `Bearer ${store.token}` }
     });
-    loadCart(); // Recargar lista
+    loadCart(); // recargar la lista del carrito
   } catch (e) {
     alert("Error eliminando producto");
   }
 };
 
-// --- VACIAR CARRITO ---
+// Vaciar el Carrito
 const clearCart = async () => {
   if(!confirm("¿Estás seguro de vaciar todo el carrito?")) return;
   try {
     await axios.delete('http://localhost:8001/api/cart', {
       headers: { Authorization: `Bearer ${store.token}` }
     });
-    loadCart(); // Recargar lista (quedará vacía)
+    loadCart(); // Recargar el carrito
   } catch (e) {
     alert("Error vaciando carrito");
   }
 };
 
-// --- PROCESAR PAGO ---
+// Procesar simulacion del pago
 const processPayment = async () => {
   if (!confirm(`¿Pagar $${total.value.toFixed(2)}?`)) return;
   processing.value = true;

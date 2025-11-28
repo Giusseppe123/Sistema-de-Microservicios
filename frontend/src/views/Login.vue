@@ -27,14 +27,14 @@ const login = async () => {
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
-    <!-- Animated Background Circles -->
+    
     <div class="absolute top-0 left-0 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
     <div class="absolute top-0 right-0 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
     <div class="absolute bottom-0 left-1/2 w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
 
-    <!-- Login Card -->
+    
     <div class="relative z-10 w-full max-w-md px-6">
-      <!-- Logo/Title Section -->
+      
       <div class="text-center mb-8 animate-fade-in-down">
         <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl shadow-2xl mb-4">
           <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -47,9 +47,8 @@ const login = async () => {
         <p class="text-slate-300 text-sm">Accede a tu cuenta</p>
       </div>
 
-      <!-- Login Form Card -->
       <div class="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/20 animate-fade-in-up">
-        <!-- Error Message -->
+        
         <div v-if="errorMsg" class="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-100 text-sm backdrop-blur-sm animate-shake">
           <div class="flex items-center gap-2">
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -60,7 +59,7 @@ const login = async () => {
         </div>
 
         <form @submit.prevent="login" class="space-y-5">
-          <!-- Email Input -->
+          
           <div class="space-y-2">
             <label class="block text-sm font-medium text-slate-200">
               Correo Electrónico
@@ -81,7 +80,7 @@ const login = async () => {
             </div>
           </div>
 
-          <!-- Password Input -->
+          
           <div class="space-y-2">
             <label class="block text-sm font-medium text-slate-200">
               Contraseña
@@ -102,7 +101,7 @@ const login = async () => {
             </div>
           </div>
 
-          <!-- Submit Button -->
+          
           <button 
             type="submit"
             :disabled="loading"
@@ -120,7 +119,7 @@ const login = async () => {
           </button>
         </form>
 
-        <!-- Links Section -->
+        
         <div class="mt-6 pt-6 border-t border-white/10">
           <div class="flex flex-col sm:flex-row justify-between items-center gap-3 text-sm">
             <router-link 
@@ -139,7 +138,7 @@ const login = async () => {
         </div>
       </div>
 
-      <!-- Footer -->
+      
       <div class="text-center mt-6 text-slate-400 text-xs animate-fade-in">
         <p>Sistema de Microservicios Distribuidos</p>
       </div>

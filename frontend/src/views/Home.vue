@@ -15,9 +15,7 @@ const productForm = ref({ name: '', price: '', stock: '', description: '', image
 const stockInputs = ref({});
 const cartInputs = ref({});
 
-// ---------------------------------------------------------
-// 1. CARGAR PRODUCTOS (Laravel)
-// ---------------------------------------------------------
+// 1. Cargar los productos desde Laravel
 const loadProducts = async () => {
   try {
     const res = await axios.get('http://localhost:8001/api/products');
@@ -32,9 +30,7 @@ const loadProducts = async () => {
   }
 };
 
-// ---------------------------------------------------------
-// 2. GUARDAR PRODUCTO (Laravel)
-// ---------------------------------------------------------
+//2. Guardar productos del laravel
 const saveProduct = async () => {
   const formData = new FormData();
   formData.append('name', productForm.value.name);
@@ -63,9 +59,7 @@ const saveProduct = async () => {
   }
 };
 
-// ---------------------------------------------------------
-// 3. ELIMINAR PRODUCTO (Laravel)
-// ---------------------------------------------------------
+// 3. Eliminar productos del laravel
 const deleteProduct = async (id) => {
   if (!confirm("¿Eliminar este producto?")) return;
   try {
@@ -80,9 +74,8 @@ const deleteProduct = async (id) => {
   }
 };
 
-// ---------------------------------------------------------
-// 4. GESTIONAR INVENTARIO (RUST + ACTUALIZACIÓN VISUAL)
-// ---------------------------------------------------------
+// 4. Gestionar inventario (Rust + actualización visual)
+
 const updateStockRust = async (productId) => {
   // Obtenemos el valor del input específico de este producto
   const newStockVal = stockInputs.value[productId];
@@ -103,8 +96,7 @@ const updateStockRust = async (productId) => {
       headers: { Authorization: `Bearer ${store.token}` }
     });
 
-    // B. TRUCO VISUAL: Actualizamos el número en la pantalla inmediatamente
-    // Buscamos el producto en nuestra lista local
+
     const productIndex = products.value.findIndex(p => p.id === productId);
     if (productIndex !== -1) {
       // Forzamos la actualización del valor visual
@@ -122,9 +114,8 @@ const updateStockRust = async (productId) => {
   }
 };
 
-// ---------------------------------------------------------
-// 5. CARRITO (Laravel)
-// ---------------------------------------------------------
+// 5. Carrito (Laravel)
+
 const addToCart = async (productId) => {
   const qty = cartInputs.value[productId] || 1;
   try {

@@ -46,14 +46,13 @@ const register = async () => {
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden py-12">
-    <!-- Animated Background Circles -->
+    
     <div class="absolute top-0 left-0 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
     <div class="absolute top-0 right-0 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
     <div class="absolute bottom-0 left-1/2 w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
 
-    <!-- Register Card -->
     <div class="relative z-10 w-full max-w-md px-6">
-      <!-- Logo/Title Section -->
+      
       <div class="text-center mb-8 animate-fade-in-down">
         <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl shadow-2xl mb-4">
           <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,9 +65,8 @@ const register = async () => {
         <p class="text-slate-300 text-sm">Únete a nuestra plataforma</p>
       </div>
 
-      <!-- Register Form Card -->
       <div class="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/20 animate-fade-in-up">
-        <!-- Error Message -->
+        
         <div v-if="error" class="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-100 text-sm backdrop-blur-sm animate-shake">
           <div class="flex items-center gap-2">
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -79,7 +77,6 @@ const register = async () => {
         </div>
 
         <form @submit.prevent="register" class="space-y-4">
-          <!-- Name Input -->
           <div class="space-y-2">
             <label class="block text-sm font-medium text-slate-200">
               Nombre Completo
@@ -92,7 +89,6 @@ const register = async () => {
             />
           </div>
 
-          <!-- Username Input -->
           <div class="space-y-2">
             <label class="block text-sm font-medium text-slate-200">
               Usuario
@@ -106,7 +102,6 @@ const register = async () => {
             <p class="text-xs text-slate-400">Incluye "admin" en el username para obtener permisos de administrador</p>
           </div>
 
-          <!-- Email Input -->
           <div class="space-y-2">
             <label class="block text-sm font-medium text-slate-200">
               Correo Electrónico
@@ -121,7 +116,6 @@ const register = async () => {
             <p class="text-xs text-slate-400">Usa un correo válido: @gmail.com, @hotmail.com, @outlook.com, etc.</p>
           </div>
 
-          <!-- Password Input -->
           <div class="space-y-2">
             <label class="block text-sm font-medium text-slate-200">
               Contraseña
@@ -136,7 +130,6 @@ const register = async () => {
             <p class="text-xs text-slate-400">Mínimo 8 caracteres: mayúscula, minúscula, número y símbolo</p>
           </div>
 
-          <!-- Confirm Password Input -->
           <div class="space-y-2">
             <label class="block text-sm font-medium text-slate-200">
               Confirmar Contraseña
@@ -150,7 +143,6 @@ const register = async () => {
             />
           </div>
 
-          <!-- Submit Button -->
           <button 
             type="submit"
             :disabled="loading"
@@ -168,7 +160,6 @@ const register = async () => {
           </button>
         </form>
 
-        <!-- Link to Login -->
         <div class="mt-6 pt-6 border-t border-white/10 text-center">
           <p class="text-sm text-slate-300">
             ¿Ya tienes cuenta? 
@@ -179,7 +170,6 @@ const register = async () => {
         </div>
       </div>
 
-      <!-- Footer -->
       <div class="text-center mt-6 text-slate-400 text-xs animate-fade-in">
         <p>Sistema de Microservicios Distribuidos</p>
       </div>
