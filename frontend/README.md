@@ -1,78 +1,91 @@
-### 2. README FRONTEND (Vue.js)
-**Ubicación:** `frontend/README.md`
+#  Frontend - Sistema de Microservicios
 
-```markdown
-# 🎨 Frontend - Vue.js 3
+## Descripción
 
-Cliente web desarrollado con **Vue.js 3 (Composition API)**, **Vite** y **Tailwind CSS**. Consume los tres microservicios del sistema.
+Frontend desarrollado con **Vue.js 3** y **Tailwind CSS** que proporciona una interfaz moderna y profesional para el sistema de e-commerce distribuido.
 
-## 🛠 Estructura del Proyecto
+##  Tecnologías
 
-* `src/stores/auth.js`: **Pinia Store**. Maneja el estado global de autenticación (Token JWT, Rol de Usuario).
-* `src/views/`:
-    * `Login.vue` / `Register.vue` / `Verify.vue`: Interfaz con el microservicio de Python.
-    * `Home.vue`: Dashboard principal. Consume Laravel (Productos) y Rust (Inventario).
-    * `Cart.vue`: Carrito de compras. Consume Laravel.
-* `src/router/`: Configuración de rutas y **Guardias de Navegación** (protección de rutas privadas).
+- **Vue.js 3** - Framework progresivo de JavaScript
+- **Vue Router** - Enrutamiento SPA
+- **Pinia** - Gestión de estado
+- **Axios** - Cliente HTTP
+- **Tailwind CSS** - Framework de CSS utility-first
+- **Vite** - Build tool y dev server
 
-## ✨ Características Implementadas
+---
 
-1. **Gestión de Roles:** La interfaz se adapta dinámicamente.
-    * **Admin:** Ve paneles de edición, creación de productos y gestión de stock (Rust).
-    * **User:** Ve botones de compra y acceso al carrito.
-2. **Validación de Formularios:** Regex para contraseñas seguras y confirmación de doble contraseña.
-3. **Feedback Visual:** Actualización optimista del stock en la UI al interactuar con Rust.
-4. **Diseño Moderno:** Esquema de colores profesional azul/gris, glassmorphism y animaciones suaves.
+## 🛣️ Rutas de la Aplicación
 
-## 🎨 Diseño
+### Rutas Públicas (sin autenticación)
 
-- **Colores:** Paleta profesional azul/gris (slate-800, blue-800, cyan-600)
-- **Componentes:** Iconos SVG, glassmorphism, animaciones CSS
-- **Responsive:** Diseño adaptable a diferentes tamaños de pantalla
+| Ruta | Componente | Descripción |
+|------|-----------|-------------|
+| `/login` | Login.vue | Iniciar sesión |
+| `/register` | Register.vue | Registrar nueva cuenta |
+| `/verify` | Verify.vue | Verificar cuenta con código |
 
-## 📦 Comandos Docker (Desarrollo)
+### Rutas de Usuario (requiere autenticación)
 
-El servicio se levanta automáticamente con el `docker-compose` principal, pero para reconstruir solo el frontend:
+| Ruta | Componente | Descripción |
+|------|-----------|-------------|
+| `/` | Home.vue | Catálogo de productos (tienda) |
+| `/cart` | Cart.vue | Carrito de compras |
+
+### Rutas de Administrador (requiere rol admin)
+
+| Ruta | Componente | Descripción |
+|------|-----------|-------------|
+| `/admin` | AdminDashboard.vue | Dashboard con estadísticas |
+| `/admin/inventory` | InventoryManagement.vue | Gestión de inventario |
+| `/admin/catalog` | ProductCatalog.vue | Catálogo completo |
+| `/admin/create` | CreateProduct.vue | Crear nuevo producto |
+
+---
+
+##  Funcionalidades Principales
+
+###  Vista Previa de Imágenes
+Al crear un producto, puedes ver la imagen antes de subirla usando FileReader API.
+
+###  Validación de Stock Negativo
+- Frontend: Input HTML5 con `min="0"`
+- Frontend: Validación JavaScript
+- Backend: Validación en servicio Rust
+
+###  Panel de Administrador
+- Dashboard con estadísticas en tiempo real
+- Gestión de inventario con tabla profesional
+- Catálogo con búsqueda, filtros y ordenamiento
+- Modal de detalles para ver/editar productos
+
+###  Interfaz Moderna
+- Gradientes y animaciones suaves
+- Diseño responsivo
+- Iconos SVG personalizados
+- Indicadores de estado de stock
+
+---
+
+##  Desarrollo Local
 
 ```bash
-docker-compose up -d --build frontend
-```
-
-## 🚀 Desarrollo Local
-
-```bash
-# Instalar dependencias
+cd frontend
 npm install
-
-# Servidor de desarrollo
 npm run dev
-
-# Build para producción
-npm run build
 ```
 
-## 🔌 Conexión con Backend
+La aplicación estará disponible en: http://localhost:5173
 
-El frontend se conecta a los siguientes servicios:
+---
 
-- **Auth Service (Python):** `http://localhost:8000`
-- **Products Service (PHP):** `http://localhost:8001`
-- **Inventory Service (Rust):** `http://localhost:8002`
+## 📝 Notas Importantes
 
-## 📝 Rutas Principales
+- ⚠️ Para ser administrador, el **username debe contener "admin"** al registrarse
+- 🔒 Todas las rutas admin están protegidas con guardias de ruta
+- 🖼️ Las imágenes se suben como `multipart/form-data`
+- 💾 El token JWT se guarda en `localStorage`
 
-| Ruta | Componente | Descripción | Protegida |
-| :--- | :--- | :--- | :--- |
-| `/login` | Login.vue | Inicio de sesión | No |
-| `/register` | Register.vue | Registro de usuario | No |
-| `/verify` | Verify.vue | Verificación de cuenta | No |
-| `/` | Home.vue | Dashboard principal | Sí |
-| `/cart` | Cart.vue | Carrito de compras | Sí (User) |
+---
 
-## 🔐 Autenticación
-
-El frontend utiliza Pinia para gestionar el estado de autenticación:
-- Token JWT almacenado en `localStorage`
-- Decodificación del token para extraer rol y usuario
-- Guards de navegación para proteger rutas privadas
-```
+Para más detalles, consulta el [README principal](../README.md) y el [walkthrough.md](../.gemini/antigravity/brain/076d9d45-e168-4539-8be9-5819abc94191/walkthrough.md).
